@@ -94,17 +94,38 @@ def load_dataset(prefer_real: bool = True) -> Tuple[Optional[pd.DataFrame], Opti
     return None, None
 
 
-def game_to_pixel(x: float, y: float, w: int, h: int) -> Tuple[float, float]:
-    """将游戏坐标 (0~MAP_MAX_COORD) 映射到图片像素坐标"""
-    px = (x / MAP_MAX_COORD) * w
-    py = (y / MAP_MAX_COORD) * h
+def get_map_dims(sample: pd.Series) -> Tuple[float, float]:
+    """Retrieve actual map max coordinates from normalized data."""
+    default_dim = 20000.0
+    map_max_x = default_dim
+    map_max_y = default_dim
+    
+    if "ring1_x_norm" in sample and pd.notna(sample["ring1_x_norm"]) and float(sample["ring1_x_norm"]) > 0:
+        map_max_x = float(sample["ring1_x"]) / float(sample["ring1_x_norm"])
+        map_max_y = float(sample["ring1_y"]) / float(sample["ring1_y_norm"])
+    elif "ring2_x_norm" in sample and pd.notna(sample["ring2_x_norm"]) and float(sample["ring2_x_norm"]) > 0:
+        map_max_x = float(sample["ring2_x"]) / float(sample["ring2_x_norm"])
+        map_max_y = float(sample["ring2_y"]) / float(sample["ring2_y_norm"])
+        
+    if map_max_x < 1000:
+        map_max_x = default_dim
+    if map_max_y < 1000:
+        map_max_y = default_dim
+
+    return map_max_x, map_max_y
+
+
+def game_to_pixel(x: float, y: float, w: int, h: int, map_w: float, map_h: float) -> Tuple[float, float]:
+    """将游戏坐标映射到图片像素坐标"""
+    px = (x / map_w) * w
+    py = (y / map_h) * h
     return px, py
 
 
-def pixel_to_game(px: float, py: float, w: int, h: int) -> Tuple[float, float]:
+def pixel_to_game(px: float, py: float, w: int, h: int, map_w: float, map_h: float) -> Tuple[float, float]:
     """将图片像素坐标映射回游戏坐标系"""
-    gx = (px / max(w, 1)) * MAP_MAX_COORD
-    gy = (py / max(h, 1)) * MAP_MAX_COORD
+    gx = (px / max(w, 1)) * map_w
+    gy = (py / max(h, 1)) * map_h
     return gx, gy
 
 
@@ -181,6 +202,7 @@ def draw_circles_on_map(
     # 核心修复：数据集里的 x,y 坐标是游戏 native 单位（~20000范围），而半径 r 通常是“米”
     # 比如 ring1_r = ~900 米。整个 Apex 地图宽度一般认为是 ~4000 米左右。
     MAP_WIDTH_METERS = 4000.0
+    map_w, map_h = get_map_dims(sample)
 
     # --- 画第 1 圈（蓝色）---
     use_norm = "ring1_x_norm" in sample
@@ -193,7 +215,7 @@ def draw_circles_on_map(
         cy1 = float(sample["ring1_y_norm"]) * h
     else:
         r1_x, r1_y = float(sample["ring1_x"]), float(sample["ring1_y"])
-        cx1, cy1 = game_to_pixel(r1_x, r1_y, w, h)
+        cx1, cy1 = game_to_pixel(r1_x, r1_y, w, h, map_w, map_h)
 
     # ALGS 风格的大圈，白色/亮蓝色边框，内部有微微的透明白色/蓝色，表示安全区
     draw.ellipse(
@@ -216,7 +238,7 @@ def draw_circles_on_map(
             cy2 = float(sample["ring2_y_norm"]) * h
         else:
             r2_x, r2_y = float(sample["ring2_x"]), float(sample["ring2_y"])
-            cx2, cy2 = game_to_pixel(r2_x, r2_y, w, h)
+            cx2, cy2 = game_to_pixel(r2_x, r2_y, w, h, map_w, map_h)
         
         # 显示缩小后的 2圈 范围，用略微不同的颜色
         draw.ellipse(
@@ -246,7 +268,7 @@ def draw_circles_on_map(
         t5_x = float(sample["target_ring5_x"])
         t5_y = float(sample["target_ring5_y"])
         t5_r = float(sample.get("target_ring5_r", 50))
-        tcx, tcy = game_to_pixel(t5_x, t5_y, w, h)
+        tcx, tcy = game_to_pixel(t5_x, t5_y, w, h, map_w, map_h)
         tr5 = (t5_r / MAP_WIDTH_METERS) * w
         # 让半径可见，最少 8 像素
         tr5 = max(tr5, 8)
@@ -430,7 +452,8 @@ def main():
 
         if has_click and not submitted:
             click_px = st.session_state.last_click
-            pred_x, pred_y = pixel_to_game(click_px[0], click_px[1], CANVAS_SIZE, CANVAS_SIZE)
+            map_w, map_h = get_map_dims(sample)
+            pred_x, pred_y = pixel_to_game(click_px[0], click_px[1], CANVAS_SIZE, CANVAS_SIZE, map_w, map_h)
             st.info(f"🖱️ You clicked: ({pred_x:.0f}, {pred_y:.0f})")
 
             if st.button("✅ Submit Prediction", use_container_width=True, type="primary"):
@@ -483,8 +506,9 @@ def main():
     if submitted and has_click:
         st.markdown("---")
 
+        map_w, map_h = get_map_dims(sample)
         click_px = st.session_state.last_click
-        pred_x, pred_y = pixel_to_game(click_px[0], click_px[1], CANVAS_SIZE, CANVAS_SIZE)
+        pred_x, pred_y = pixel_to_game(click_px[0], click_px[1], CANVAS_SIZE, CANVAS_SIZE, map_w, map_h)
         true_x = float(sample["target_ring5_x"])
         true_y = float(sample["target_ring5_y"])
         distance = math.sqrt((pred_x - true_x) ** 2 + (pred_y - true_y) ** 2)
@@ -510,7 +534,7 @@ def main():
 
         with c3:
             st.markdown("##### 📏 Error Evaluation")
-            delta_pct = distance / MAP_MAX_COORD * 100
+            delta_pct = distance / map_w * 100
             st.metric(
                 label="Euclidean Distance",
                 value=f"{distance:.0f}",
