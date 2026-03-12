@@ -284,54 +284,36 @@ def main():
     # ========== 自定义 CSS ==========
     st.markdown("""
     <style>
-        /* 全局样式 */
-        .stApp {
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-        }
         /* 标题样式 */
         h1 {
-            background: linear-gradient(90deg, #ff6b6b, #ffa500, #ffeb3b);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
             font-weight: 800 !important;
-        }
-        /* 侧边栏 */
-        section[data-testid="stSidebar"] {
-            background: linear-gradient(180deg, #1a1a2e, #16213e) !important;
-        }
-        section[data-testid="stSidebar"] h2 {
-            color: #ffa500 !important;
+            letter-spacing: -0.5px;
         }
         /* 指标数字 */
         [data-testid="stMetricValue"] {
-            font-size: 1.3rem !important;
+            font-size: 1.4rem !important;
             font-weight: 700 !important;
         }
         /* 成功/错误消息 */
         .stAlert {
-            border-radius: 12px !important;
-            font-size: 1.1rem !important;
-        }
-        /* 地图容器阴影 */
-        .map-container {
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            border-radius: 8px !important;
         }
         /* 图例 */
         .legend-item {
             display: inline-flex;
             align-items: center;
             margin-right: 18px;
-            font-size: 0.85rem;
+            font-size: 0.95rem;
+            font-weight: 500;
         }
         .legend-dot {
             width: 12px;
             height: 12px;
             border-radius: 50%;
             display: inline-block;
-            margin-right: 5px;
+            margin-right: 6px;
             border: 2px solid rgba(255,255,255,0.3);
+            box-shadow: 0 0 4px rgba(0,0,0,0.5);
         }
     </style>
     """, unsafe_allow_html=True)
