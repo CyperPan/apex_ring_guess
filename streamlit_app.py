@@ -275,7 +275,7 @@ def draw_circles_on_map(
 
 def main():
     st.set_page_config(
-        page_title="Apex 缩圈预测练习",
+        page_title="Apex Ring Predictor",
         page_icon="🎯",
         layout="wide",
         initial_sidebar_state="expanded",
@@ -336,50 +336,50 @@ def main():
     </style>
     """, unsafe_allow_html=True)
 
-    st.title("🎯 Apex Legends 缩圈预测练习")
+    st.title("🎯 Apex Legends Ring Prediction Practice")
 
     # ========== 侧边栏 ==========
     with st.sidebar:
-        st.header("⚙️ 设置")
+        st.header("⚙️ Settings")
         threshold = st.slider(
-            '判定为"正确"的最大误差（游戏坐标距离）',
+            'Max error distance for "Correct" prediction (in-game units)',
             min_value=100,
             max_value=3000,
             value=800,
             step=50,
-            help="值越小越严格。800 约等于地图总长度的 4%。",
+            help="Smaller values are stricter. 800 is approx 4% of total map width.",
         )
 
         st.markdown("---")
 
-        if st.button("🎲 抽一局新题", use_container_width=True):
+        if st.button("🎲 Draw New Match", use_container_width=True):
             st.session_state.pop("current_sample", None)
             st.session_state.pop("last_click", None)
             st.session_state.pop("submitted", None)
             st.rerun()
 
-        if st.button("🗑️ 清除本次预测", use_container_width=True):
+        if st.button("🗑️ Clear Prediction", use_container_width=True):
             st.session_state.pop("last_click", None)
             st.session_state.pop("submitted", None)
             st.rerun()
 
         st.markdown("---")
         st.markdown("""
-        ### 📖 玩法说明
-        1. 观察地图上的 **蓝色圈**（第 1 圈）
-        2. 在地图上**点击**你预测的最终 **第 5 圈** 圈心位置
-        3. 点击 **提交预测** 查看结果
-        4. 系统会揭晓 **第 2 圈** 和 **实际第 5 圈**
+        ### 📖 How to Play
+        1. Observe the **Blue Ring** (Ring 1) on the map.
+        2. **Click** on the map to predict the final **Ring 5** center.
+        3. Click **Submit Prediction** to check your results.
+        4. The system will reveal **Ring 2** and the **True Ring 5**.
         """)
 
         st.markdown("---")
         st.markdown("""
-        ### 🏷️ 图例
+        ### 🏷️ Legend
         <div style="margin-top: 8px;">
-            <div class="legend-item"><span class="legend-dot" style="background: #3c96ff;"></span> 第 1 圈</div>
-            <div class="legend-item"><span class="legend-dot" style="background: #00e6e6;"></span> 第 2 圈</div>
-            <div class="legend-item"><span class="legend-dot" style="background: #ff3c3c;"></span> 你的预测</div>
-            <div class="legend-item"><span class="legend-dot" style="background: #00ff46;"></span> 真实第 5 圈</div>
+            <div class="legend-item"><span class="legend-dot" style="background: #3c96ff;"></span> Ring 1</div>
+            <div class="legend-item"><span class="legend-dot" style="background: #00e6e6;"></span> Ring 2</div>
+            <div class="legend-item"><span class="legend-dot" style="background: #ff3c3c;"></span> Your Prediction</div>
+            <div class="legend-item"><span class="legend-dot" style="background: #00ff46;"></span> True Ring 5</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -389,20 +389,20 @@ def main():
         stats = st.session_state.stats
         if stats["total"] > 0:
             st.markdown("---")
-            st.markdown("### 📊 历史统计")
+            st.markdown("### 📊 Statistics")
             accuracy = stats["correct"] / stats["total"] * 100
-            st.metric("预测准确率", f"{accuracy:.1f}%")
+            st.metric("Prediction Accuracy", f"{accuracy:.1f}%")
             st.progress(stats["correct"] / stats["total"])
-            st.caption(f"正确 {stats['correct']} / 总共 {stats['total']} 局")
+            st.caption(f"{stats['correct']} Correct / {stats['total']} Total Matches")
 
     # ========== 加载数据 ==========
     df, source_dir = load_dataset(prefer_real=True)
     if df is None:
         st.error(
-            "❌ 未找到可用的数据集。\n\n"
-            "请先在命令行中运行：\n"
-            "- `python workflow.py ./real_data ./output_real` 以生成真实数据集；或\n"
-            "- `python train_model.py` 以生成模拟数据集。"
+            "❌ Dataset not found.\n\n"
+            "Please run in your terminal first:\n"
+            "- `python workflow.py ./real_data ./output_real` to generate real dataset; or\n"
+            "- `python train_model.py` to generate mock dataset."
         )
         return
 
@@ -412,7 +412,7 @@ def main():
     sample = st.session_state.current_sample
 
     # 地图信息
-    map_cn = sample.get("map_name_cn", "未知地图")
+    map_cn = sample.get("map_name_cn", "Unknown Map")
     map_en = sample.get("map_name_en", "")
     match_id = sample.get("match_id", "N/A")
 
@@ -421,13 +421,13 @@ def main():
 
     with col_info:
         # 信息卡片
-        st.subheader(f"🗺️ {map_cn}")
-        st.caption(f"{map_en} · `{match_id}`")
+        st.subheader(f"🗺️ {map_en or map_cn}")
+        st.caption(f"`{match_id}`")
 
         st.markdown("---")
 
         # 已知圈信息
-        st.markdown("#### 📍 已知圈信息")
+        st.markdown("#### 📍 Known Ring Info")
 
         r1_x, r1_y = float(sample["ring1_x"]), float(sample["ring1_y"])
         r1_r = float(sample.get("ring1_r", 0))
@@ -435,10 +435,10 @@ def main():
         r2_r = float(sample.get("ring2_r", 0))
 
         st.markdown(f"""
-        | 圈层 | 半径 (游戏单位) | 状态 |
+        | Ring | Radius (Units) | Status |
         |:---:|:---:|:---:|
-        | 🔵 第 1 圈 | {r1_r:.0f} | 已给出 |
-        | 🔷 第 2 圈 | {r2_r:.0f} | 提交后揭晓 |
+        | 🔵 Ring 1 | {r1_r:.0f} | Given |
+        | 🔷 Ring 2 | {r2_r:.0f} | Revealed after submit |
         """)
 
         # 提交按钮
@@ -449,9 +449,9 @@ def main():
         if has_click and not submitted:
             click_px = st.session_state.last_click
             pred_x, pred_y = pixel_to_game(click_px[0], click_px[1], CANVAS_SIZE, CANVAS_SIZE)
-            st.info(f"🖱️ 你点击了：({pred_x:.0f}, {pred_y:.0f})")
+            st.info(f"🖱️ You clicked: ({pred_x:.0f}, {pred_y:.0f})")
 
-            if st.button("✅ 提交预测", use_container_width=True, type="primary"):
+            if st.button("✅ Submit Prediction", use_container_width=True, type="primary"):
                 st.session_state.submitted = True
                 # 更新统计
                 true_x = float(sample["target_ring5_x"])
@@ -462,10 +462,10 @@ def main():
                     st.session_state.stats["correct"] += 1
                 st.rerun()
         elif not has_click:
-            st.warning("👆 请在右侧地图上点击你预测的第 5 圈圈心位置")
+            st.warning("👆 Please click on the map to predict the Ring 5 center")
 
     with col_map:
-        st.subheader("🗺️ 在地图上点击预测")
+        st.subheader("🗺️ Click on map to predict")
 
         # 加载地图图片
         map_path = find_map_image(map_cn, map_en)
@@ -509,43 +509,43 @@ def main():
         is_correct = distance <= threshold
 
         # 三列展示结果
-        st.subheader("📊 预测结果")
+        st.subheader("📊 Prediction Results")
         c1, c2, c3 = st.columns(3)
 
         with c1:
-            st.markdown("##### 🔴 你的预测")
+            st.markdown("##### 🔴 Your Prediction")
             st.metric(
-                label="预测坐标 (x, y)",
+                label="Predicted (x, y)",
                 value=f"({pred_x:.0f}, {pred_y:.0f})",
             )
 
         with c2:
-            st.markdown("##### 🟢 真实答案")
+            st.markdown("##### 🟢 True Answer")
             st.metric(
-                label="真实坐标 (x, y)",
+                label="True (x, y)",
                 value=f"({true_x:.0f}, {true_y:.0f})",
             )
 
         with c3:
-            st.markdown("##### 📏 误差判定")
+            st.markdown("##### 📏 Error Evaluation")
             delta_pct = distance / MAP_MAX_COORD * 100
             st.metric(
-                label="欧几里得距离",
+                label="Euclidean Distance",
                 value=f"{distance:.0f}",
-                delta=f"{delta_pct:.1f}% 地图宽度",
+                delta=f"{delta_pct:.1f}% Map Width",
                 delta_color="off",
             )
-            st.metric(label="判定阈值", value=f"{threshold}")
+            st.metric(label="Threshold", value=f"{threshold}")
 
         st.markdown("---")
         if is_correct:
-            st.success(f"✅ 恭喜！偏差 {distance:.0f}（{delta_pct:.1f}%），在阈值 {threshold} 以内，判定为 **正确**！")
+            st.success(f"✅ Congrats! Error {distance:.0f} ({delta_pct:.1f}%) is within threshold {threshold}. Evaluated as **CORRECT**!")
         else:
-            st.error(f"❌ 很遗憾，偏差 {distance:.0f}（{delta_pct:.1f}%），超出阈值 {threshold}，判定为 **错误**。")
+            st.error(f"❌ Unfortunately, Error {distance:.0f} ({delta_pct:.1f}%) exceeds threshold {threshold}. Evaluated as **WRONG**.")
 
         # 下一局快捷按钮
         st.markdown("")
-        if st.button("⏩ 下一局挑战", use_container_width=True, type="primary"):
+        if st.button("⏩ Next Match", use_container_width=True, type="primary"):
             st.session_state.pop("current_sample", None)
             st.session_state.pop("last_click", None)
             st.session_state.pop("submitted", None)
@@ -553,7 +553,7 @@ def main():
 
     # 底部信息
     st.markdown("---")
-    st.caption(f"数据来源: `{source_dir}` · 共 {len(df)} 局数据")
+    st.caption(f"Data source: `{source_dir}` · Total {len(df)} matches")
 
 
 if __name__ == "__main__":
