@@ -41,19 +41,19 @@ MAP_IMAGE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "map_im
 # 地图名称 -> 图片文件名映射（匹配你刚上传的文件名）
 MAP_NAME_TO_FILE = {
     # 英文名
-    "King's Canyon": "KingsCanyon.png",
-    "World's Edge": "world's edge_副本.png",
-    "Olympus": "Olympus_副本.png",
-    "Broken Moon": "broken Moon_副本.png",
-    "Storm Point": "storm point_副本.png",
-    "E-District": "E-District_副本.png",
+    "King's Canyon": "kings_canyon.png",
+    "World's Edge": "worlds_edge.png",
+    "Olympus": "olympus.png",
+    "Broken Moon": "broken_moon.png",
+    "Storm Point": "storm_point.png",
+    "E-District": "e_district.png",
     # 中文名
-    "诸王峡谷": "KingsCanyon.png",
-    "世界边缘": "world's edge_副本.png",
-    "奥林匹斯": "Olympus_副本.png",
-    "残月": "broken Moon_副本.png",
-    "风暴点": "storm point_副本.png",
-    "电竞区": "E-District_副本.png",
+    "诸王峡谷": "kings_canyon.png",
+    "世界边缘": "worlds_edge.png",
+    "奥林匹斯": "olympus.png",
+    "残月": "broken_moon.png",
+    "风暴点": "storm_point.png",
+    "电竞区": "e_district.png",
 }
 
 
